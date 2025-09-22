@@ -1,1 +1,1 @@
-# mi-primer-repo
+Jhamyl Sergio Aguilar Tambo
