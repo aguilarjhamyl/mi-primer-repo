@@ -1,0 +1,445 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Mini Party Reviews — Sprint 1</title>
+  <style>
+    /* Paleta baby (sin rosado) */
+    :root{
+      --bg:#F5FDFF; /* baby celeste muy claro */
+      --card:#FFFFFF;
+      --accent:#BFEAF5; /* mint/celeste */
+      --accent-2:#DFF7EA; /* verde claro */
+      --text:#223344;
+      --muted:#6B7280;
+      --danger:#E74C3C;
+      --radius:14px;
+      --glass: rgba(255,255,255,0.7);
+    }
+    *{box-sizing:border-box;font-family:Inter, system-ui, -apple-system, sans-serif}
+    body{margin:0;background:linear-gradient(180deg,var(--bg),#EEF9F7);color:var(--text);min-height:100vh}
+    header{padding:20px 18px;display:flex;align-items:center;gap:12px}
+    .logo{width:56px;height:56px;border-radius:12px;overflow:hidden;background:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:700;color:#0b3b44}
+    .brand{font-size:20px;font-weight:700}
+    .desc{font-size:13px;color:var(--muted)}
+    main{padding:18px}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px}
+    .card{background:var(--card);border-radius:12px;padding:12px;box-shadow:0 6px 18px rgba(12,40,40,0.06);display:flex;flex-direction:column}
+    .thumb{width:100%;height:160px;border-radius:10px;overflow:hidden;background:#eee}
+    .thumb img{width:100%;height:100%;object-fit:cover;display:block}
+    .meta{display:flex;align-items:center;justify-content:space-between;margin-top:10px}
+    .meta .left{display:flex;flex-direction:column}
+    .namebtn{background:none;border:0;padding:0;font-size:18px;font-weight:700;color:#0b5560;cursor:pointer}
+    .info{font-size:13px;color:var(--muted)}
+    .rating{display:flex;align-items:center;gap:8px}
+    .stars{color:#F3C623;font-weight:700}
+    /* detalle modal */
+    .overlay{position:fixed;inset:0;background:rgba(0,0,0,0.35);display:none;align-items:center;justify-content:center;padding:20px}
+    .modal{width:100%;max-width:980px;background:var(--card);border-radius:14px;overflow:hidden;box-shadow:0 18px 50px rgba(0,0,0,0.2)}
+    .modal-main{display:grid;grid-template-columns:1fr 380px;gap:12px}
+    .carousel{position:relative;height:340px;background:#fafafa}
+    .carousel img{width:100%;height:100%;object-fit:cover}
+    .carousel .dots{position:absolute;left:12px;bottom:12px;display:flex;gap:6px}
+    .dot{width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,0.6)}
+    .dot.active{background:var(--accent-2)}
+    .modal-side{padding:16px}
+    .btn{display:inline-block;background:var(--accent);padding:10px 14px;border-radius:10px;border:0;cursor:pointer}
+    .opinion-area{margin-top:12px}
+    .stars-input{display:flex;gap:6px;font-size:30px;cursor:pointer}
+    .stars-input button{background:none;border:0}
+    input[type=text], textarea{width:100%;padding:10px;border-radius:8px;border:1px solid #e6eef0;margin-top:6px}
+    textarea{min-height:90px;resize:vertical}
+    .small{font-size:13px;color:var(--muted)}
+    .list-comments{margin-top:12px;max-height:320px;overflow:auto;padding-right:6px}
+    .comment{padding:10px;border-radius:10px;background:var(--accent-2);margin-bottom:8px}
+    .admin-row{display:flex;gap:8px;margin-top:8px}
+    .admin-row button{background:#fff;border:1px solid #ddd;padding:6px 8px;border-radius:8px}
+    footer{padding:18px;text-align:center;color:var(--muted)}
+    /* animación fondo */
+    .bg-anim{position:fixed;inset:0;z-index:-1;opacity:0.6;background:radial-gradient(circle at 10% 20%, rgba(191,234,245,0.6), transparent 10%), radial-gradient(circle at 80% 80%, rgba(223,247,234,0.6), transparent 12%)}
+    /* responsive */
+    @media(max-width:900px){.modal-main{grid-template-columns:1fr;}.carousel{height:220px}.modal-side{padding:12px}}
+  </style>
+</head>
+<body>
+  <div class="bg-anim" aria-hidden></div>
+  <header>
+    <div class="logo">MPR</div>
+    <div>
+      <div class="brand">Mini Party Reviews</div>
+      <div class="desc">Descubre y valora salones infantiles — versión Sprint 1</div>
+    </div>
+    <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
+      <button class="btn" id="admin-toggle">Ingresar como admin</button>
+      <button class="btn" id="download-json">Descargar salones.json</button>
+    </div>
+  </header>
+
+  <main>
+    <section>
+      <h2 style="margin:0 0 8px 0">Salones de prueba</h2>
+      <div class="grid" id="salones-grid"></div>
+    </section>
+  </main>
+
+  <div class="overlay" id="overlay" role="dialog" aria-modal="true">
+    <div class="modal" role="document">
+      <div class="modal-main">
+        <div class="carousel" id="carousel">
+          <!-- imágenes -->
+          <div class="dots" id="dots"></div>
+        </div>
+        <div class="modal-side">
+          <h3 id="modal-name"></h3>
+          <div class="small" id="modal-phone"></div>
+          <div class="small" id="modal-maps"></div>
+          <p id="modal-desc" class="small" style="margin-top:8px"></p>
+
+          <div style="margin-top:12px">
+            <div class="small">Promedio: <span id="modal-average">0</span> ★ (<span id="modal-count">0</span>)</div>
+          </div>
+
+          <div class="opinion-area">
+            <button class="btn" id="write-opinion">Escribir una opinión</button>
+          </div>
+
+          <div id="form-area" style="display:none;margin-top:8px">
+            <div class="small">¿Cómo valoras tu experiencia?</div>
+            <div class="stars-input" id="stars-input" role="radiogroup" aria-label="Selecciona estrellas"></div>
+            <div style="margin-top:8px">
+              <div class="small">Nombre</div>
+              <input id="input-name" type="text" placeholder="Tu nombre" />
+            </div>
+            <div style="margin-top:8px">
+              <div class="small">Cuéntanos más sobre tu experiencia...</div>
+              <textarea id="input-opinion" placeholder="Tu opinión"></textarea>
+            </div>
+            <div style="margin-top:8px"><button class="btn" id="send-opinion">Enviar valoración</button></div>
+            <div class="small" id="form-msg" style="color:var(--danger);margin-top:8px;display:none"></div>
+          </div>
+
+          <div class="list-comments" id="comments-list"></div>
+
+          <div class="admin-row" id="admin-row" style="display:none">
+            <button id="add-photo">Editar fotos</button>
+            <button id="edit-salon">Editar salón</button>
+            <button id="delete-salon">Eliminar salón</button>
+            <button id="logout-admin">Salir admin</button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>Mini Party Reviews — Sprint 1 • Interfaz sin backend (localStorage)</footer>
+
+  <!-- salones.json embebido (puedes descargarlo con el botón) -->
+  <script id="salones-json" type="application/json">
+  {
+     "salones": [
+      {
+        "id": 1,
+        "nombre": "Hakuna Matata",
+        "telefono": "+591 70693245",
+        "linkmaps": "https://maps.app.goo.gl/tnETvcrABo5SA4M67",
+        "direccion": "Av. Cívica n 55, El Alto",
+        "descripcion": "Espacio amplio con decoración temática y juegos.",
+        "imagenes": [
+          "https://drive.google.com/uc?export=view&id=1FGNwmbm6l2uF1xZrDpzOGle2QuqmGvLF",
+          "https://drive.google.com/uc?export=view&id=1BzeqqqUECSwJiW39hRGdDTFKZvQyzZEI",
+          "https://drive.google.com/uc?export=view&id=1wL_p3dImAoPXGtgLfR4u3a3cQ4o-P_68",
+          "https://drive.google.com/uc?export=view&id=1cZSpR6woTQkVbwbAu9yw2gViafEfVzAV",
+          "https://drive.google.com/uc?export=view&id=1t9rI5t0geG9QWtxUOvxrzF8bHMypJxMw"
+        ]
+      },
+      {
+        "id": 2,
+        "nombre": "Divertiland",
+        "telefono": "No disponible",
+        "linkmaps": "https://maps.app.goo.gl/tQbrCn1ctsXzZjkQ6",
+        "direccion": "Cruce Villa Adela, El Alto",
+        "descripcion": "Salón familiar con área de pinta-caritas y animadores.",
+        "imagenes": [
+          "https://drive.google.com/uc?export=view&id=1uzce2w_hdP7lEpdgla7ImM8o51OAtYbS",
+          "https://drive.google.com/uc?export=view&id=1ZFgCCepEZPCmxGsjLPvTlCI2VZ9_um6S",
+          "https://drive.google.com/uc?export=view&id=1Pn_Lu9aA-vAi7hSd3P8Izr6_pFU5Nji5",
+          "https://drive.google.com/uc?export=view&id=1t4HYI8kJJr-ARZS7GCO-nVg7vAQuZi8M",
+          "https://drive.google.com/uc?export=view&id=1-og7PGxvAfgFyBUO5lnRXRzyyRDWHaRi"
+        ]
+      },
+      {
+        "id": 3,
+        "nombre": "Dulce Encanto",
+        "telefono": "+591 77781023",
+        "linkmaps": "https://maps.app.goo.gl/ZUS5ks82sH3sEGJC7",
+        "direccion": "Calle D, El Alto",
+        "descripcion": "Decoración personalizada y servicio de catering para niños.",
+        "imagenes": [
+          "https://drive.google.com/uc?export=view&id=1KrMxDlBjSPts3w0CassV0b1kfN7K5bDx",
+          "https://drive.google.com/uc?export=view&id=14V7684zUh0BbInhnNaxV411r9sAcRuc7",
+          "https://drive.google.com/uc?export=view&id=1oXNn_Qfp33yFhNiAUwvGJMyJh-5iw4Ex",
+          "https://drive.google.com/uc?export=view&id=1hRcwTZQGaZX-4ATORR5a5zrMrHUQlNez",
+          "https://drive.google.com/uc?export=view&id=1DdU_r3auCEDx7ZrcDbOGLSaaS4MDD21i"
+        ]
+      }
+    ]
+  }
+  </script>
+
+  <script>
+    // Config
+    const FORBIDDEN = ["where","table","database","fuck","cabrón","shit","puta","culero","mierda"];
+    const ADMIN_PASSWORD = 'admin123'; // puedes cambiarlo en el código
+
+    // util
+    function sanitizeText(s){
+      if(!s) return '';
+      const lower = s.toLowerCase();
+      for(const f of FORBIDDEN){
+        if(lower.includes(f)) return null;
+      }
+      return s.trim();
+    }
+
+    // cargar salones desde el script JSON
+    const salonesData = JSON.parse(document.getElementById('salones-json').textContent).salones;
+
+    // localStorage keys
+    const LS_COMMENTS = 'mpr_comments_v1';
+    const LS_ADMIN = 'mpr_admin_v1';
+
+    // estado
+    let comments = JSON.parse(localStorage.getItem(LS_COMMENTS) || '[]');
+    let isAdmin = localStorage.getItem(LS_ADMIN) === '1';
+
+    const grid = document.getElementById('salones-grid');
+    const overlay = document.getElementById('overlay');
+    const carousel = document.getElementById('carousel');
+    const dots = document.getElementById('dots');
+    const modalName = document.getElementById('modal-name');
+    const modalPhone = document.getElementById('modal-phone');
+    const modalMaps = document.getElementById('modal-maps');
+    const modalDesc = document.getElementById('modal-desc');
+    const modalAverage = document.getElementById('modal-average');
+    const modalCount = document.getElementById('modal-count');
+    const commentsList = document.getElementById('comments-list');
+    const adminRow = document.getElementById('admin-row');
+
+    // render grid
+    function renderGrid(){
+      grid.innerHTML='';
+      salonesData.forEach(salon=>{
+        const card = document.createElement('article');
+        card.className='card';
+        const mainImg = salon.imagenes && salon.imagenes[0] ? salon.imagenes[0] : 'https://via.placeholder.com/800x450.png?text=Sin+imagen';
+        card.innerHTML = `
+          <div class="thumb"><img src="${mainImg}" alt="${salon.nombre}"/></div>
+          <div class="meta">
+            <div class="left">
+              <button class="namebtn" data-id="${salon.id}">${salon.nombre}</button>
+              <div class="info">${salon.direccion}</div>
+              <div class="info">Tel: ${salon.telefono}</div>
+            </div>
+            <div class="rating">
+              <div class="stars">${renderStarsInline(salon.id)}</div>
+            </div>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+      // attach click
+      document.querySelectorAll('.namebtn').forEach(btn=>btn.addEventListener('click',e=>openModal(parseInt(e.target.dataset.id))));
+    }
+
+    function renderStarsInline(id){
+      const stats = statsFor(id);
+      const avg = (stats.avg || 0).toFixed(1);
+      const count = stats.count || 0;
+      return `${avg} ★ (${count})`;
+    }
+
+    function statsFor(id){
+      const arr = comments.filter(c=>c.idSalon===id && c.estado!=='oculto');
+      const count = arr.length;
+      const sum = arr.reduce((s,c)=>s+(c.puntuacion||0),0);
+      const avg = count? (sum/count) : 0;
+      return {count,avg};
+    }
+
+    // modal
+    let modalSalon = null;
+    let currentIndex = 0;
+    let slideTimer = null;
+
+    function openModal(id){
+      modalSalon = salonesData.find(s=>s.id===id);
+      if(!modalSalon) return;
+      modalName.textContent = modalSalon.nombre;
+      modalPhone.innerHTML = 'Teléfono: '+modalSalon.telefono;
+      modalMaps.innerHTML = `Ubicación: <a href="${modalSalon.linkmaps}" target="_blank">Ver en Google Maps</a>`;
+      modalDesc.textContent = modalSalon.descripcion || '';
+      modalAverage.textContent = statsFor(id).avg.toFixed(1);
+      modalCount.textContent = statsFor(id).count;
+      renderCarousel(modalSalon.imagenes || []);
+      renderComments(id);
+      adminRow.style.display = isAdmin? 'flex':'none';
+      document.getElementById('form-area').style.display='none';
+      overlay.style.display='flex';
+    }
+
+    function closeModal(){
+      overlay.style.display='none';
+      clearInterval(slideTimer);
+    }
+
+    overlay.addEventListener('click',(e)=>{ if(e.target===overlay) closeModal(); });
+
+    function renderCarousel(images){
+      carousel.innerHTML = '';
+      dots.innerHTML='';
+      if(!images || images.length===0) images=['https://via.placeholder.com/800x450.png?text=Sin+imagen'];
+      images.forEach((url,i)=>{
+        const img = document.createElement('img');
+        img.src = url; img.alt = 'Imagen '+(i+1);
+        img.style.display = i===0? 'block':'none';
+        carousel.appendChild(img);
+
+        const d = document.createElement('div'); d.className='dot'+(i===0?' active':''); d.dataset.index=i; dots.appendChild(d);
+        d.addEventListener('click',()=>showSlide(i));
+      });
+      currentIndex=0;
+      startSlider(images.length);
+    }
+
+    function showSlide(i){
+      const imgs = carousel.querySelectorAll('img');
+      imgs.forEach((img,idx)=>img.style.display = idx===i? 'block':'none');
+      dots.querySelectorAll('.dot').forEach((d,idx)=>d.classList.toggle('active', idx===i));
+      currentIndex=i;
+    }
+
+    function startSlider(n){
+      clearInterval(slideTimer);
+      slideTimer = setInterval(()=>{
+        currentIndex = (currentIndex+1) % n; showSlide(currentIndex);
+      }, 10000); // 10s
+    }
+
+    // comentarios
+    function renderComments(id){
+      commentsList.innerHTML='';
+      const arr = comments.filter(c=>c.idSalon===id).sort((a,b)=>new Date(b.fecha)-new Date(a.fecha));
+      if(arr.length===0) commentsList.innerHTML='<div class="small">No hay opiniones aún. Sé el primero en opinar.</div>';
+      arr.forEach(c=>{
+        const div = document.createElement('div'); div.className='comment';
+        div.innerHTML = `<strong>${escapeHtml(c.nombreanonimo)}</strong> · <span class="small">${new Date(c.fecha).toLocaleString()}</span><div style="margin-top:6px">${escapeHtml(c.comentario)}</div><div class="small" style="margin-top:6px">${c.puntuacion} ★</div>`;
+        if(isAdmin){
+          const btnRow = document.createElement('div'); btnRow.style.marginTop='8px';
+          const del = document.createElement('button'); del.textContent='Eliminar'; del.addEventListener('click',()=>adminDeleteComment(c.id));
+          const hide = document.createElement('button'); hide.textContent=(c.estado==='visible'?'Ocultar':'Mostrar'); hide.addEventListener('click',()=>adminToggleComment(c.id));
+          const edit = document.createElement('button'); edit.textContent='Editar estrellas'; edit.addEventListener('click',()=>adminEditRating(c.id));
+          btnRow.appendChild(del); btnRow.appendChild(hide); btnRow.appendChild(edit);
+          div.appendChild(btnRow);
+        }
+        commentsList.appendChild(div);
+      });
+    }
+
+    function escapeHtml(s){
+      return (s+'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    // opinion flow
+    document.getElementById('write-opinion').addEventListener('click',()=>{
+      document.getElementById('form-area').style.display='block';
+      renderStarsInput(0);
+    });
+
+    let chosenStars = 0;
+    function renderStarsInput(filled){
+      const container = document.getElementById('stars-input'); container.innerHTML='';
+      for(let i=1;i<=5;i++){
+        const btn = document.createElement('button'); btn.innerHTML = '★';
+        btn.style.color = (i<=filled)? colorFor(i): '#ccc';
+        btn.addEventListener('click',()=>{ chosenStars=i; renderStarsInput(i); });
+        container.appendChild(btn);
+      }
+    }
+
+    function colorFor(n){
+      switch(n){case 1: return '#E74C3C'; case 2: return '#FF7A00'; case 3: return '#F3C623'; case 4: return '#9ACD32'; case 5: return '#2ECC71'; default: return '#ccc';}
+    }
+
+    document.getElementById('send-opinion').addEventListener('click',()=>{
+      const name = document.getElementById('input-name').value;
+      const opinion = document.getElementById('input-opinion').value;
+      const msg = document.getElementById('form-msg'); msg.style.display='none';
+      if(chosenStars<=0 || !name.trim() || !opinion.trim()){ msg.textContent='Debe completar: calificación, nombre y opinión.'; msg.style.display='block'; return; }
+      const sName = sanitizeText(name);
+      const sOpinion = sanitizeText(opinion);
+      if(sName===null || sOpinion===null){ msg.textContent='Texto contiene palabras no permitidas.'; msg.style.display='block'; return; }
+      // check unique by same name + salon
+      const exists = comments.find(c=>c.idSalon===modalSalon.id && c.nombreanonimo.toLowerCase()===sName.toLowerCase());
+      if(exists){ msg.textContent='Ya has opinado con este nombre para este salón (solo una vez).'; msg.style.display='block'; return; }
+      const newC = { id: Date.now(), IdUsuario: null, idSalon: modalSalon.id, nombreanonimo: sName, comentario: sOpinion, puntuacion: chosenStars, fecha: new Date().toISOString(), estado: 'visible' };
+      comments.push(newC); localStorage.setItem(LS_COMMENTS, JSON.stringify(comments));
+      // refresh
+      document.getElementById('input-name').value=''; document.getElementById('input-opinion').value=''; chosenStars=0; renderStarsInput(0);
+      renderComments(modalSalon.id); modalAverage.textContent = statsFor(modalSalon.id).avg.toFixed(1); modalCount.textContent = statsFor(modalSalon.id).count; renderGrid();
+    });
+
+    // admin actions
+    document.getElementById('admin-toggle').addEventListener('click',()=>{
+      if(isAdmin){ logoutAdmin(); return; }
+      const pass = prompt('Ingresa contraseña de administrador:');
+      if(pass===ADMIN_PASSWORD){ isAdmin=true; localStorage.setItem(LS_ADMIN,'1'); alert('Modo admin activado'); adminRow.style.display='flex'; renderComments(modalSalon?modalSalon.id:null); renderGrid(); }
+      else alert('Contraseña incorrecta');
+    });
+
+    document.getElementById('logout-admin').addEventListener('click',logoutAdmin);
+
+    function logoutAdmin(){ isAdmin=false; localStorage.removeItem(LS_ADMIN); adminRow.style.display='none'; renderGrid(); alert('Sesión admin cerrada'); }
+
+    function adminDeleteComment(id){ if(!confirm('Eliminar comentario?')) return; comments = comments.filter(c=>c.id!==id); localStorage.setItem(LS_COMMENTS,JSON.stringify(comments)); renderComments(modalSalon.id); renderGrid(); }
+    function adminToggleComment(id){ const c = comments.find(x=>x.id===id); if(!c) return; c.estado = c.estado==='visible'?'oculto':'visible'; localStorage.setItem(LS_COMMENTS,JSON.stringify(comments)); renderComments(modalSalon.id); renderGrid(); }
+    function adminEditRating(id){ const c = comments.find(x=>x.id===id); if(!c) return; const val = parseInt(prompt('Nueva calificación (1-5):', c.puntuacion)); if([1,2,3,4,5].includes(val)){ c.puntuacion=val; localStorage.setItem(LS_COMMENTS,JSON.stringify(comments)); renderComments(modalSalon.id); renderGrid(); } }
+
+    // delete salon (admin)
+    document.getElementById('delete-salon').addEventListener('click',()=>{
+      if(!modalSalon) return; if(!confirm('Eliminar salón?')) return; const idx = salonesData.findIndex(s=>s.id===modalSalon.id); if(idx>=0) salonesData.splice(idx,1); renderGrid(); closeModal();
+    });
+
+    // edit salon - simple name/phone
+    document.getElementById('edit-salon').addEventListener('click',()=>{
+      const n = prompt('Nuevo nombre:', modalSalon.nombre); if(n===null) return; const p = prompt('Nuevo teléfono:', modalSalon.telefono); if(p===null) return; modalSalon.nombre = n; modalSalon.telefono = p; renderGrid(); modalName.textContent = modalSalon.nombre; modalPhone.textContent = 'Teléfono: '+modalSalon.telefono; });
+
+    // add photo (admin) - simple push url
+    document.getElementById('add-photo').addEventListener('click', () => {
+      const url = prompt('URL de la nueva foto (formato 16:9 preferible):');
+      if (!url) return;
+      modalSalon.imagenes = modalSalon.imagenes || [];
+      modalSalon.imagenes.push(url);
+      renderCarousel(modalSalon.imagenes);
+      alert('Foto añadida (temporal en sesión)');
+    });
+
+    // download salones.json
+    document.getElementById('download-json').addEventListener('click',()=>{
+      const blob = new Blob([document.getElementById('salones-json').textContent], {type:'application/json'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href=url; a.download='salones.json'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+    });
+
+    // simple admin delete salon when not in modal via grid - not allowed for users.
+
+    // initialise
+    renderGrid();
+
+    // keyboard: esc close
+    document.addEventListener('keydown',(e)=>{ if(e.key==='Escape') closeModal(); });
+
+  </script>
+</body>
+</html>

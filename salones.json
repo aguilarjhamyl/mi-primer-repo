@@ -1,0 +1,55 @@
+{
+  "salones": [
+    {
+      "id": 1,
+      "nombre": "Hakuna Matata",
+      "telefono": "+591 70693245",
+      "ubicacion": "https://maps.app.goo.gl/tnETvcrABo5SA4M67",
+      "direccion": "El Alto, Bolivia",
+      "imagenes": [
+        "/assets/salones/salon1-2.jpg",
+        "/assets/salones/salon1-3.jpg",
+        "/assets/salones/salon1-4.jpg",
+        "/assets/salones/salon1-1.jpg",
+        "/assets/salones/salon1-5.jpg"
+      ],
+      "descripcion": "Salón infantil con temática de aventura y diversión para los más pequeños",
+      "calificacionPromedio": 4.5,
+      "totalReseñas": 12
+    },
+    {
+      "id": 2,
+      "nombre": "Divertiland",
+      "telefono": "Consultar en el lugar",
+      "ubicacion": "https://maps.app.goo.gl/tQbrCn1ctsXzZjkQ6",
+      "direccion": "El Alto, Bolivia",
+      "imagenes": [
+        "/assets/salones/salon2-3.jpg",
+        "/assets/salones/salon2-2.jpg",
+        "/assets/salones/salon2-5.jpg",
+        "/assets/salones/salon2-1.jpg",
+        "/assets/salones/salon2-4.jpg"
+      ],
+      "descripcion": "Espacio mágico lleno de diversión y entretenimiento para celebraciones especiales",
+      "calificacionPromedio": 4.2,
+      "totalReseñas": 8
+    },
+    {
+      "id": 3,
+      "nombre": "Dulce Encanto",
+      "telefono": "+591 77781023",
+      "ubicacion": "https://maps.app.goo.gl/ZUS5ks82sH3sEGJC7",
+      "direccion": "El Alto, Bolivia",
+      "imagenes": [
+        "/assets/salones/salon3-3.jpg",
+        "/assets/salones/salon3-1.jpg",
+        "/assets/salones/salon3-2.jpg",
+        "/assets/salones/salon3-4.jpg",
+        "/assets/salones/salon3-5.jpg"
+      ],
+      "descripcion": "Ambiente dulce y encantador perfecto para fiestas infantiles memorables",
+      "calificacionPromedio": 4.7,
+      "totalReseñas": 15
+    }
+  ]
+}
